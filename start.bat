@@ -26,7 +26,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [1/5] Python detected successfully
+echo [1/6] Python detected successfully
 python --version
 echo.
 
@@ -40,7 +40,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [2/5] pip is available
+echo [2/6] pip is available
 echo.
 
 REM Check if requirements.txt exists
@@ -54,7 +54,7 @@ if not exist "requirements.txt" (
     exit /b 1
 )
 
-echo [3/5] Installing/Updating dependencies...
+echo [3/6] Installing/Updating dependencies...
 echo.
 pip install -r requirements.txt --upgrade --quiet
 if errorlevel 1 (
@@ -67,7 +67,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [4/5] Dependencies installed successfully
+echo [4/6] Dependencies installed successfully
 echo.
 
 REM Check if main.py exists
@@ -79,21 +79,50 @@ if not exist "main.py" (
     exit /b 1
 )
 
-REM Check if templates folder exists
+REM Check and create project structure
+echo [5/6] Verifying project structure...
+
 if not exist "templates" (
-    echo [WARNING] templates folder not found!
-    echo Creating templates folder...
+    echo [WARNING] templates folder not found! Creating...
     mkdir templates
 )
 
-REM Check if static folder exists
 if not exist "static" (
-    echo [WARNING] static folder not found!
-    echo Creating static folder...
+    echo [WARNING] static folder not found! Creating...
     mkdir static
 )
 
-echo [5/5] Starting Flask server...
+REM Check required template files
+if not exist "templates\index.html" (
+    echo [WARNING] templates\index.html not found!
+)
+
+if not exist "templates\login.html" (
+    echo [WARNING] templates\login.html not found!
+)
+
+if not exist "templates\register.html" (
+    echo [WARNING] templates\register.html not found!
+)
+
+REM Check required static files
+if not exist "static\style.css" (
+    echo [WARNING] static\style.css not found!
+)
+
+if not exist "static\auth.css" (
+    echo [WARNING] static\auth.css not found!
+)
+
+if not exist "static\main.js" (
+    echo [WARNING] static\main.js not found!
+)
+
+echo.
+echo Project structure verified.
+echo.
+
+echo [6/6] Starting Flask server...
 echo.
 echo ========================================
 echo   Server Configuration
@@ -102,6 +131,15 @@ echo.
 echo Storage Path: E:\cloud
 echo Local Access: http://127.0.0.1:5000
 echo Network Access: http://YOUR_LOCAL_IP:5000
+echo.
+echo ========================================
+echo   Features
+echo ========================================
+echo.
+echo - Multi-user authentication
+echo - Multiple file upload support
+echo - Folder upload support
+echo - Isolated user storage
 echo.
 echo First time? Register a new account!
 echo Already registered? Login to access your files.
@@ -119,5 +157,8 @@ echo.
 echo ========================================
 echo   Server Stopped
 echo ========================================
+echo.
+echo Server has been stopped.
+echo Your files are safe in E:\cloud
 echo.
 pause

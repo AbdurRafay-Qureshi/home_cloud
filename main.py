@@ -194,50 +194,114 @@ def browse_files(path=''):
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    """Handle multiple file uploads"""
     if 'username' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
     username = session['username']
     
     try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
+        # Check if files were uploaded
+        if 'files' not in request.files:
+            print("No 'files' key in request.files")
+            return jsonify({'error': 'No files provided'}), 400
         
-        file = request.files['file']
+        files = request.files.getlist('files')
         current_path = request.form.get('path', '')
         
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
+        print(f"Received {len(files)} files for upload")
         
-        original_filename = secure_filename(file.filename)
-        if not original_filename:
-            original_filename = 'unnamed_file'
+        if not files or len(files) == 0:
+            return jsonify({'error': 'No files selected'}), 400
         
-        upload_dir = get_user_storage_path(username, current_path)
+        # Filter out empty files
+        files = [f for f in files if f.filename and f.filename != '']
         
-        if not is_safe_path(get_user_storage_path(username), upload_dir):
+        if len(files) == 0:
+            return jsonify({'error': 'No valid files selected'}), 400
+        
+        base_upload_dir = get_user_storage_path(username, current_path)
+        
+        if not is_safe_path(get_user_storage_path(username), base_upload_dir):
             return jsonify({'error': 'Invalid path'}), 403
         
-        os.makedirs(upload_dir, exist_ok=True)
-        filepath = os.path.join(upload_dir, original_filename)
+        os.makedirs(base_upload_dir, exist_ok=True)
         
-        # Handle duplicate filenames
-        counter = 1
-        name, ext = os.path.splitext(original_filename)
-        while os.path.exists(filepath):
-            filepath = os.path.join(upload_dir, f"{name}_{counter}{ext}")
-            counter += 1
+        uploaded_files = []
+        failed_files = []
         
-        file.save(filepath)
+        for file in files:
+            try:
+                filename = file.filename
+                
+                # Check if this is a folder upload (has / or \ in filename)
+                if '/' in filename or '\\' in filename:
+                    # Normalize path separators
+                    filename = filename.replace('\\', '/')
+                    
+                    # Split into directory and filename
+                    parts = filename.split('/')
+                    actual_filename = parts[-1]
+                    subdirs = '/'.join(parts[:-1])
+                    
+                    # Create target directory
+                    if subdirs:
+                        target_dir = os.path.join(base_upload_dir, subdirs)
+                        if not is_safe_path(get_user_storage_path(username), target_dir):
+                            failed_files.append(filename)
+                            continue
+                        os.makedirs(target_dir, exist_ok=True)
+                        target_path = os.path.join(target_dir, secure_filename(actual_filename))
+                    else:
+                        target_path = os.path.join(base_upload_dir, secure_filename(actual_filename))
+                else:
+                    # Regular file upload
+                    safe_filename = secure_filename(filename)
+                    if not safe_filename:
+                        safe_filename = f'file_{len(uploaded_files)}'
+                    target_path = os.path.join(base_upload_dir, safe_filename)
+                
+                # Handle duplicate filenames
+                if os.path.exists(target_path):
+                    name, ext = os.path.splitext(os.path.basename(target_path))
+                    counter = 1
+                    while os.path.exists(target_path):
+                        new_name = f"{name}_{counter}{ext}"
+                        target_path = os.path.join(os.path.dirname(target_path), new_name)
+                        counter += 1
+                
+                # Save the file
+                file.save(target_path)
+                uploaded_files.append(os.path.basename(target_path))
+                print(f"✓ Uploaded: {target_path}")
+                
+            except Exception as e:
+                print(f"✗ Error uploading {file.filename}: {str(e)}")
+                failed_files.append(file.filename)
+                continue
+        
+        if len(uploaded_files) == 0:
+            return jsonify({'error': 'All uploads failed'}), 500
+        
+        response_msg = f'Successfully uploaded {len(uploaded_files)} file(s)'
+        if failed_files:
+            response_msg += f'. Failed: {len(failed_files)} file(s)'
+        
+        print(f"Upload complete: {len(uploaded_files)} success, {len(failed_files)} failed")
         
         return jsonify({
-            'message': 'File uploaded successfully',
-            'filename': os.path.basename(filepath)
+            'message': response_msg,
+            'uploaded': len(uploaded_files),
+            'failed': len(failed_files)
         }), 200
         
     except Exception as e:
         print(f"Upload error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Server error during upload'}), 500
+
+
 
 @app.route('/download/<path:filepath>', methods=['GET'])
 def download_file(filepath):
