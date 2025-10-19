@@ -9,67 +9,115 @@ echo ========================================
 echo   Home Cloud Storage Server
 echo ========================================
 echo.
+echo [INFO] Multi-user cloud storage system
+echo [INFO] Storage location: E:\cloud
+echo.
 
 REM Check if Python is installed
 python --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python is not installed or not in PATH!
-    echo Please install Python from https://www.python.org/
+    echo.
+    echo Please install Python 3.8 or higher from:
+    echo https://www.python.org/downloads/
+    echo.
+    echo Make sure to check "Add Python to PATH" during installation!
     pause
     exit /b 1
 )
 
-echo [1/4] Python detected successfully
+echo [1/5] Python detected successfully
+python --version
 echo.
 
 REM Check if pip is available
 pip --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] pip is not available!
+    echo.
+    echo Please ensure pip is installed with Python.
     pause
     exit /b 1
 )
+
+echo [2/5] pip is available
+echo.
 
 REM Check if requirements.txt exists
 if not exist "requirements.txt" (
-    echo [ERROR] requirements.txt not found in current directory!
-    echo Current directory: %cd%
+    echo [ERROR] requirements.txt not found!
     echo.
-    dir /b
+    echo Expected location: %cd%\requirements.txt
+    echo.
+    echo Please make sure all project files are in the same directory.
     pause
     exit /b 1
 )
 
-echo [2/4] Installing/Updating dependencies...
-pip install -r requirements.txt --quiet
+echo [3/5] Installing/Updating dependencies...
+echo.
+pip install -r requirements.txt --upgrade --quiet
 if errorlevel 1 (
     echo [ERROR] Failed to install dependencies!
-    echo Trying without --quiet flag to see errors...
-    pip install -r requirements.txt
+    echo.
+    echo Trying again with verbose output...
+    echo.
+    pip install -r requirements.txt --upgrade
     pause
     exit /b 1
 )
 
-echo [3/4] Dependencies installed successfully
+echo [4/5] Dependencies installed successfully
 echo.
 
 REM Check if main.py exists
 if not exist "main.py" (
     echo [ERROR] main.py not found!
+    echo.
+    echo Expected location: %cd%\main.py
     pause
     exit /b 1
 )
 
-echo [4/4] Starting Flask server...
-echo.
-echo Server will start in 3 seconds...
-echo Your browser will open automatically.
+REM Check if templates folder exists
+if not exist "templates" (
+    echo [WARNING] templates folder not found!
+    echo Creating templates folder...
+    mkdir templates
+)
+
+REM Check if static folder exists
+if not exist "static" (
+    echo [WARNING] static folder not found!
+    echo Creating static folder...
+    mkdir static
+)
+
+echo [5/5] Starting Flask server...
 echo.
 echo ========================================
+echo   Server Configuration
+echo ========================================
+echo.
+echo Storage Path: E:\cloud
+echo Local Access: http://127.0.0.1:5000
+echo Network Access: http://YOUR_LOCAL_IP:5000
+echo.
+echo First time? Register a new account!
+echo Already registered? Login to access your files.
+echo.
+echo ========================================
+echo.
+echo Opening browser in 3 seconds...
 timeout /t 3 /nobreak >nul
 
 REM Start Flask server and open browser
-start "" "http://127.0.0.1:5000"
+start "" "http://127.0.0.1:5000/login"
 python main.py
 
+echo.
+echo ========================================
+echo   Server Stopped
+echo ========================================
+echo.
 pause

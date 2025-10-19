@@ -1,20 +1,41 @@
 # 🏠 Home Cloud Storage
 
-A lightweight, self-hosted personal cloud storage system built with Flask. Access and manage your files from any device on your home network with a clean, modern interface.
+A lightweight, self-hosted **multi-user** personal cloud storage system built with Flask. Each user gets their own private storage space accessible from any device on your home network with a clean, modern interface.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)
+![Version](https://img.shields.io/badge/Version-2.0.0-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## ✨ Features
 
-- 📁 **Folder Management** - Create, navigate, and organize files in folders
-- 📤 **File Upload/Download** - Drag and drop file uploads with download support
-- 🗂️ **Category Organization** - Pre-organized folders (Documents, Pictures, Videos, Downloads)
-- 🖥️ **Responsive UI** - Clean table-based interface with sidebar navigation
-- 🌐 **Network Access** - Access from any device on your local network
-- 🔒 **Secure Storage** - Custom storage path with file validation
-- ⚡ **One-Click Startup** - Automated setup and launch with batch script
+### 🔐 User Authentication
+- **Registration System** - Create accounts with username and password
+- **Secure Login** - Password hashing with Flask-Bcrypt
+- **Session Management** - Stay logged in across browser sessions
+- **User Isolation** - Each user has completely private storage
+
+### 📁 File Management
+- **Folder Organization** - Create, navigate, and organize files in folders
+- **File Upload/Download** - Easy drag and drop file uploads with download support
+- **Category Organization** - Pre-organized folders (Documents, Pictures, Videos, Downloads)
+- **Context Menu** - Right-click for quick actions (download, delete)
+
+### 🖥️ User Interface
+- **Responsive Design** - Clean table-based interface with sidebar navigation
+- **User Dashboard** - Displays username and storage info
+- **Modern Auth Pages** - Beautiful login and registration pages
+- **Real-time Updates** - Instant feedback on all actions
+
+### 🌐 Network Features
+- **Local Network Access** - Access from any device on your home network
+- **Multi-device Support** - Use from phones, tablets, computers
+- **No Internet Required** - Works completely offline on your local network
+
+### ⚡ Easy Setup
+- **One-Click Startup** - Automated setup and launch with batch script
+- **Auto-folder Creation** - Automatically creates user folders on registration
+- **Custom Storage Path** - Configure your own storage location
 
 ## 🚀 Quick Start
 
@@ -22,6 +43,7 @@ A lightweight, self-hosted personal cloud storage system built with Flask. Acces
 
 - Python 3.8 or higher
 - pip (Python package installer)
+- Windows OS (for `start.bat`) or manual setup on Mac/Linux
 
 ### Installation
 
@@ -35,10 +57,10 @@ A lightweight, self-hosted personal cloud storage system built with Flask. Acces
 2. **Run the application** (Windows)
 
    Simply double-click `start.bat` - it will:
-   - Check Python installation
-   - Install all dependencies automatically
-   - Start the server
-   - Open your browser to `http://127.0.0.1:5000`
+   - ✅ Check Python installation
+   - ✅ Install all dependencies automatically
+   - ✅ Start the server
+   - ✅ Open your browser to the login page
 
    **OR** manually:
 
@@ -47,24 +69,56 @@ A lightweight, self-hosted personal cloud storage system built with Flask. Acces
    python main.py
    ```
 
-3. **Access the application**
+3. **Create your account**
 
-   - Local: `http://127.0.0.1:5000`
-   - Network: `http://YOUR_LOCAL_IP:5000` (e.g., `http://192.168.1.100:5000`)
+   - Browser opens to `http://127.0.0.1:5000/login`
+   - Click "Create one" to register
+   - Enter username and password
+   - Start uploading files!
+
+4. **Access from other devices**
+
+   - Find your local IP: Run `ipconfig` in command prompt
+   - On other devices: `http://YOUR_LOCAL_IP:5000` (e.g., `http://192.168.1.100:5000`)
 
 ## 📂 Project Structure
 
 ```
 home_cloud/
-├── main.py              # Flask backend server
+├── main.py              # Flask backend server with authentication
 ├── requirements.txt     # Python dependencies
 ├── start.bat            # One-click startup script (Windows)
+├── users.json           # User credentials (auto-created)
 ├── static/
-│   └── style.css        # Application styles
+│   ├── style.css        # Dashboard styles
+│   └── auth.css         # Login/Register page styles
 ├── templates/
-│   └── index.html       # Frontend interface
+│   ├── index.html       # Main dashboard (requires login)
+│   ├── login.html       # Login page
+│   └── register.html    # Registration page
 └── README.md            # Project documentation
 ```
+
+## 💾 Storage Structure
+
+Files are organized by user in the configured storage path (default: `E:/cloud`):
+
+```
+E:/cloud/
+├── user1/
+│   ├── Documents/
+│   ├── Pictures/
+│   ├── Videos/
+│   └── Downloads/
+├── user2/
+│   ├── Documents/
+│   ├── Pictures/
+│   ├── Videos/
+│   └── Downloads/
+└── ...
+```
+
+Each user can only see and access their own files, ensuring complete data isolation.
 
 ## 🛠️ Configuration
 
@@ -84,21 +138,67 @@ Default maximum file size is 500MB. Modify in `main.py`:
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
 ```
 
+### Secret Key
+
+For production use, change the secret key in `main.py`:
+
+```python
+app.config['SECRET_KEY'] = 'your-random-secret-key-here'
+```
+
 ### Allowed File Types
 
 The application accepts all common file types. To restrict, edit the `ALLOWED_EXTENSIONS` set in `main.py`.
 
-## 🖼️ Interface
+## 📋 API Endpoints
 
-The application features:
+| Method | Endpoint                | Description                     | Auth Required |
+|--------|-------------------------|---------------------------------|---------------|
+| GET    | `/login`                | Login page                     | No            |
+| POST   | `/login`                | Authenticate user              | No            |
+| GET    | `/register`             | Registration page              | No            |
+| POST   | `/register`             | Create new user                | No            |
+| GET    | `/logout`               | Logout user                    | Yes           |
+| GET    | `/`                     | Main dashboard                 | Yes           |
+| GET    | `/browse/<path>`        | List files and folders         | Yes           |
+| POST   | `/upload`               | Upload a file                  | Yes           |
+| GET    | `/download/<path>`      | Download a file                | Yes           |
+| DELETE | `/delete/<path>`        | Delete a file or folder        | Yes           |
+| POST   | `/create-folder`        | Create a new folder            | Yes           |
+| GET    | `/storage-info`         | Get storage statistics         | Yes           |
 
-- **Sidebar Navigation** - Quick access to Documents, Pictures, Videos, and Downloads folders
-- **Table View** - File listing with name, modification date, and size
-- **Upload Modal** - Simple file upload interface
-- **Context Menu** - Right-click for download and delete options
-- **Folder Creation** - Create new folders anywhere in the hierarchy
+## 🔧 Tech Stack
 
-## 🌐 Network Access
+- **Backend:** Python Flask 3.0.0
+- **Authentication:** Flask-Bcrypt (password hashing)
+- **Frontend:** HTML5, CSS3, Vanilla JavaScript
+- **File Handling:** Werkzeug
+- **Storage:** Local file system
+- **Session Management:** Flask sessions with secure cookies
+
+## 📦 Dependencies
+
+```text
+Flask==3.0.0
+Flask-Bcrypt==1.0.1
+Werkzeug==3.0.1
+Jinja2==3.1.2
+click==8.1.7
+itsdangerous==2.1.2
+MarkupSafe==2.1.5
+blinker==1.7.0
+```
+
+## 🔒 Security Features
+
+- ✅ Password hashing with bcrypt
+- ✅ Session-based authentication
+- ✅ Path validation to prevent directory traversal
+- ✅ Secure filename handling
+- ✅ User data isolation
+- ✅ CSRF protection via Flask sessions
+
+## 🌐 Network Access Guide
 
 ### Find Your Local IP
 
@@ -119,43 +219,13 @@ ifconfig
 ### Access from Other Devices
 
 1. Ensure devices are on the same network
-2. Go to `http://YOUR_IP:5000` on any device
-3. Upload, download, and manage files seamlessly
-
-## 📋 API Endpoints
-
-| Method | Endpoint                | Description                     |
-|--------|-------------------------|---------------------------------|
-| GET    | `/`                     | Main application interface      |
-| GET    | `/browse/<path>`        | List files and folders          |
-| POST   | `/upload`               | Upload a file                   |
-| GET    | `/download/<path>`      | Download a file                 |
-| DELETE | `/delete/<path>`        | Delete a file or folder         |
-| POST   | `/create-folder`        | Create a new folder             |
-| GET    | `/storage-info`         | Get storage statistics          |
-
-## 🔧 Tech Stack
-
-- **Backend:** Python Flask 3.0.0
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **File Handling:** Werkzeug
-- **Storage:** Local file system
-
-## 📦 Dependencies
-
-```text
-Flask==3.0.0
-Werkzeug==3.0.1
-Jinja2==3.1.2
-click==8.1.7
-itsdangerous==2.1.2
-MarkupSafe==2.1.5
-blinker==1.7.0
-```
+2. Open a browser and go to `http://YOUR_IP:5000`
+3. Log in with your account
+4. Upload, download, and manage files seamlessly
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -165,21 +235,41 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 🐛 Known Issues
 
-- Currently designed for home network use only (no authentication)
-- Best suited for trusted network environments
+- Designed for trusted home networks only
+- No HTTPS support (use on local network only)
+- No email verification for registration
 
-## 🔮 Future Enhancements
+## 🔮 Roadmap
 
-- [ ] User authentication system
 - [ ] File search functionality
 - [ ] File preview (images, videos, PDFs)
 - [ ] Multi-file upload
+- [ ] Drag and drop upload
+- [ ] Storage quota per user
+- [ ] Admin panel for user management
+- [ ] File sharing between users
 - [ ] Mobile app companion
-- [ ] File sharing with expiration links
 - [ ] Thumbnail generation for images
 - [ ] ZIP download for folders
+- [ ] Two-factor authentication
 
-## 📝 License
+## 📝 Changelog
+
+### v2.0.0 (2025-10-19)
+- ✨ Added multi-user authentication system
+- ✨ User registration and login pages
+- ✨ Password hashing with Flask-Bcrypt
+- ✨ Isolated storage per user
+- ✨ User dashboard with logout
+- 🛠️ Enhanced `start.bat` with better error handling
+- 📝 Updated README with authentication info
+
+### v1.0.0 (Initial Release)
+- Basic file upload/download
+- Folder navigation
+- Single-user system
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -192,12 +282,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Flask framework for the powerful backend
-- Modern web standards for the responsive interface
-- The open-source community for inspiration
+- Flask framework for the powerful and simple backend
+- Flask-Bcrypt for secure password hashing
+- The open-source community for inspiration and tools
 
 ---
 
-**⚠️ Security Note:** This application is designed for personal use on trusted home networks. For production or public-facing deployments, implement proper authentication, HTTPS, and security measures.
+**⚠️ Security Note:** This application is designed for personal use on trusted home networks. For production or public-facing deployments, implement proper authentication enhancements, HTTPS, rate limiting, and additional security measures.
 
-**💡 Tip:** To find your local IP for network access, run `ipconfig` (Windows) or `ifconfig` (Mac/Linux) in your terminal.
+**💡 Tips:**
+- Use strong passwords for your accounts
+- Regularly backup your `E:/cloud` folder
+- Keep the `users.json` file secure (contains password hashes)
+- Don't expose this server to the public internet without additional security
+
+**📧 Support:** For issues or questions, please open an issue on GitHub.
