@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Cloud Storage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .storage-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f8f9fa;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .file-input-label:hover {
+            background: #764ba2;
+        }
+        
+        .upload-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background: #218838;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .files-section {
+            margin-top: 30px;
+        }
+        
+        .files-section h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .file-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .file-info {
+            flex-grow: 1;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .file-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .download-btn, .delete-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .download-btn {
+            background: #007bff;
+            color: white;
+        }
+        
+        .download-btn:hover {
+            background: #0056b3;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state p {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Home Cloud Storage</h1>
+        
+        <div class="storage-info">
+            <p><strong>Storage Used:</strong> <span id="storageSize">0</span> MB | <strong>Files:</strong> <span id="fileCount">0</span></p>
+        </div>
+        
+        <div id="message"></div>
+        
+        <div class="upload-section">
+            <h2>📤 Upload Files</h2>
+            <p style="margin: 20px 0; color: #666;">Select a file to upload to your home cloud</p>
+            
+            <div class="file-input-wrapper">
+                <label for="fileInput" class="file-input-label">Choose File</label>
+                <input type="file" id="fileInput" />
+            </div>
+            
+            <button class="upload-btn" id="uploadBtn" disabled>Upload</button>
+            
+            <p id="selectedFile" style="margin-top: 15px; color: #666;"></p>
+        </div>
+        
+        <div class="files-section">
+            <h2>📁 Your Files</h2>
+            <div id="filesList">
+                <div class="loading">Loading files...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const selectedFileText = document.getElementById('selectedFile');
+        const messageDiv = document.getElementById('message');
+        const filesList = document.getElementById('filesList');
+        const storageSize = document.getElementById('storageSize');
+        const fileCount = document.getElementById('fileCount');
+
+        // Enable upload button when file is selected
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                uploadBtn.disabled = false;
+                selectedFileText.textContent = `Selected: ${fileInput.files[0].name}`;
+            }
+        });
+
+        // Upload file
+        uploadBtn.addEventListener('click', async () => {
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    fileInput.value = '';
+                    selectedFileText.textContent = '';
+                    loadFiles();
+                    loadStorageInfo();
+                } else {
+                    showMessage(data.error, 'error');
+                    uploadBtn.disabled = false;
+                }
+            } catch (error) {
+                showMessage('Upload failed: ' + error.message, 'error');
+                uploadBtn.disabled = false;
+            } finally {
+                uploadBtn.textContent = 'Upload';
+            }
+        });
+
+        // Show message
+        function showMessage(text, type) {
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => messageDiv.innerHTML = '', 5000);
+        }
+
+        // Load files list
+        async function loadFiles() {
+            try {
+                const response = await fetch('/files');
+                const data = await response.json();
+
+                if (data.files.length === 0) {
+                    filesList.innerHTML = `
+                        <div class="empty-state">
+                            <p>📂 No files uploaded yet</p>
+                            <p style="font-size: 14px; margin-top: 5px;">Upload your first file to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                filesList.innerHTML = data.files.map(file => `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-name">${escapeHtml(file.original_name)}</div>
+                            <div class="file-meta">Size: ${file.size} MB | Uploaded: ${file.uploaded}</div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="download-btn" onclick="downloadFile('${escapeHtml(file.filename)}', '${escapeHtml(file.original_name)}')">Download</button>
+                            <button class="delete-btn" onclick="deleteFile('${escapeHtml(file.filename)}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                filesList.innerHTML = '<div class="empty-state"><p>❌ Failed to load files</p></div>';
+                showMessage('Failed to load files', 'error');
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Download file
+        function downloadFile(filename, originalName) {
+            window.location.href = `/download/${filename}`;
+            showMessage(`Downloading ${originalName}...`, 'success');
+        }
+
+        // Delete file
+        async function deleteFile(filename) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+
+            try {
+                const response = await fetch(`/delete/${filename}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    loadFiles();
+                    loadStorageInfo();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Delete failed: ' + error.message, 'error');
+            }
+        }
+
+        // Load storage info
+        async function loadStorageInfo() {
+            try {
+                const response = await fetch('/storage-info');
+                const data = await response.json();
+                storageSize.textContent = data.total_size_mb;
+                fileCount.textContent = data.file_count;
+            } catch (error) {
+                console.error('Failed to load storage info');
+            }
+        }
+
+        // Initial load
+        loadFiles();
+        loadStorageInfo();
+    </script>
+</body>
+</html>
