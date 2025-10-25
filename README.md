@@ -255,7 +255,7 @@ Contributions are welcome! Please submit a Pull Request.
 
 ## 📝 Changelog
 
-### v2.0.0 (2025-10-19)
+### v1.0.0 (2025-10-19)
 - ✨ Added multi-user authentication system
 - ✨ User registration and login pages
 - ✨ Password hashing with Flask-Bcrypt
