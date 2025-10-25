@@ -1,0 +1,66 @@
+<!-- Notification Component -->
+<div id="notification" class="notification">
+    <div class="notification-content">
+        <svg class="notification-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span id="notificationText">Success!</span>
+    </div>
+</div>
+
+<style>
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 300px;
+}
+
+.notification.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.notification.alert-success {
+    border-left: 4px solid #1282A2;
+}
+
+.notification.alert-success .notification-icon {
+    color: #1282A2;
+}
+
+.notification.alert-error {
+    border-left: 4px solid #ff4444;
+}
+
+.notification.alert-error .notification-icon {
+    color: #ff4444;
+}
+
+#notificationText {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+</style>

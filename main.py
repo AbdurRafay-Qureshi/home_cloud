@@ -6,8 +6,10 @@ from datetime import datetime
 import shutil
 import json
 
+
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
+
 
 # Configuration
 app.config['SECRET_KEY'] = 'change-this-to-random-secret-key-for-production'
@@ -15,13 +17,19 @@ app.config['UPLOAD_FOLDER'] = 'E:/cloud'
 app.config['USERS_FILE'] = 'users.json'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
 
+
 # Create main upload folder
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 
 # Default folders for each user
 DEFAULT_FOLDERS = ['Documents', 'Pictures', 'Videos', 'Downloads']
 
-# User management functions
+
+# ============================================
+# USER MANAGEMENT FUNCTIONS
+# ============================================
+
 def load_users():
     """Load users from JSON file"""
     if os.path.exists(app.config['USERS_FILE']):
@@ -29,10 +37,12 @@ def load_users():
             return json.load(f)
     return {}
 
+
 def save_users(users):
     """Save users to JSON file"""
     with open(app.config['USERS_FILE'], 'w') as f:
         json.dump(users, f, indent=4)
+
 
 def create_user_folders(username):
     """Create default folders for new user"""
@@ -43,13 +53,19 @@ def create_user_folders(username):
         folder_path = os.path.join(user_base_path, folder)
         os.makedirs(folder_path, exist_ok=True)
 
+
 def get_user_storage_path(username, subpath=''):
     """Get storage path for specific user"""
     return os.path.join(app.config['UPLOAD_FOLDER'], username, subpath)
 
-# File utility functions
+
+# ============================================
+# FILE UTILITY FUNCTIONS
+# ============================================
+
 def allowed_file(filename):
     return True  # Allow all files for now
+
 
 def get_file_size(filepath):
     try:
@@ -63,13 +79,18 @@ def get_file_size(filepath):
     except:
         return "0 Bytes"
 
+
 def is_safe_path(basedir, path):
     """Check if path is within basedir"""
     basedir = os.path.abspath(basedir)
     path = os.path.abspath(path)
     return path.startswith(basedir)
 
-# Authentication routes
+
+# ============================================
+# AUTHENTICATION ROUTES
+# ============================================
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -89,6 +110,7 @@ def login():
             return jsonify({'success': False, 'message': 'User not found'}), 404
     
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -125,72 +147,87 @@ def register():
     
     return render_template('register.html')
 
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# Main application routes (require login)
+
+# ============================================
+# MAIN APPLICATION ROUTES
+# ============================================
+
 @app.route('/')
 def index():
     if 'username' not in session:
         return redirect(url_for('login'))
     return render_template('index.html', username=session['username'])
 
-@app.route('/browse', methods=['GET'])
-@app.route('/browse/', methods=['GET'])
-@app.route('/browse/<path:path>', methods=['GET'])
-def browse_files(path=''):
+
+@app.route('/list_files')
+def list_files():
+    """List files for the file manager (matches JavaScript expectations)"""
     if 'username' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
     username = session['username']
     
     try:
+        # Get path from query parameter
+        path = request.args.get('path', '')
+        
+        # Build full path for user's folder
         full_path = get_user_storage_path(username, path)
         
+        # Security check
         if not is_safe_path(get_user_storage_path(username), full_path):
             return jsonify({'error': 'Invalid path'}), 403
         
+        # Create folder if doesn't exist
         if not os.path.exists(full_path):
-            return jsonify({'error': 'Path not found'}), 404
+            os.makedirs(full_path, exist_ok=True)
         
-        items = []
+        # Get list of files and folders
+        files = []
         
-        for item_name in os.listdir(full_path):
-            item_path = os.path.join(full_path, item_name)
-            
-            try:
-                if os.path.isdir(item_path):
-                    items.append({
+        try:
+            for item_name in os.listdir(full_path):
+                item_path = os.path.join(full_path, item_name)
+                
+                try:
+                    is_dir = os.path.isdir(item_path)
+                    
+                    # Get file size (0 for directories)
+                    size = 0 if is_dir else os.path.getsize(item_path)
+                    
+                    # Get modification time
+                    modified_timestamp = os.path.getmtime(item_path)
+                    modified = datetime.fromtimestamp(modified_timestamp).strftime('%Y-%m-%d %H:%M')
+                    
+                    files.append({
                         'name': item_name,
-                        'type': 'folder',
-                        'size': '—',
-                        'modified': datetime.fromtimestamp(os.path.getmtime(item_path)).strftime('%Y-%m-%d'),
-                        'path': os.path.join(path, item_name).replace('\\', '/')
+                        'is_dir': is_dir,
+                        'size': size,
+                        'modified': modified
                     })
-                else:
-                    items.append({
-                        'name': item_name,
-                        'type': 'file',
-                        'size': get_file_size(item_path),
-                        'modified': datetime.fromtimestamp(os.path.getmtime(item_path)).strftime('%Y-%m-%d'),
-                        'path': os.path.join(path, item_name).replace('\\', '/')
-                    })
-            except Exception as e:
-                continue
+                except Exception as e:
+                    print(f"Error reading item {item_name}: {str(e)}")
+                    continue
+        except PermissionError:
+            return jsonify({'error': 'Permission denied'}), 403
         
-        items.sort(key=lambda x: (x['type'] != 'folder', x['name'].lower()))
+        # Sort: folders first, then files (alphabetically)
+        files.sort(key=lambda x: (not x['is_dir'], x['name'].lower()))
         
-        return jsonify({
-            'items': items,
-            'current_path': path,
-            'breadcrumbs': path.split('/') if path else []
-        }), 200
+        return jsonify({'files': files}), 200
         
     except Exception as e:
-        print(f"Error in browse_files: {str(e)}")
+        print(f"Error in list_files: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -302,15 +339,19 @@ def upload_file():
         return jsonify({'error': 'Server error during upload'}), 500
 
 
-
-@app.route('/download/<path:filepath>', methods=['GET'])
-def download_file(filepath):
+@app.route('/download', methods=['GET'])
+def download_file():
     if 'username' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
     username = session['username']
     
     try:
+        filepath = request.args.get('path', '')
+        
+        if not filepath:
+            return jsonify({'error': 'Path required'}), 400
+        
         full_path = get_user_storage_path(username, filepath)
         
         if not is_safe_path(get_user_storage_path(username), full_path):
@@ -327,14 +368,21 @@ def download_file(filepath):
         print(f"Download error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/delete/<path:filepath>', methods=['DELETE'])
-def delete_file(filepath):
+
+@app.route('/delete', methods=['POST'])
+def delete_file():
     if 'username' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
     username = session['username']
     
     try:
+        data = request.get_json()
+        filepath = data.get('path', '')
+        
+        if not filepath:
+            return jsonify({'error': 'Path required'}), 400
+        
         full_path = get_user_storage_path(username, filepath)
         
         if not is_safe_path(get_user_storage_path(username), full_path):
@@ -353,7 +401,8 @@ def delete_file(filepath):
         print(f"Delete error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/create-folder', methods=['POST'])
+
+@app.route('/create_folder', methods=['POST'])
 def create_folder():
     if 'username' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
@@ -362,7 +411,7 @@ def create_folder():
     
     try:
         data = request.get_json()
-        folder_name = secure_filename(data.get('name', ''))
+        folder_name = secure_filename(data.get('folder_name', ''))
         current_path = data.get('path', '')
         
         if not folder_name:
@@ -383,6 +432,7 @@ def create_folder():
     except Exception as e:
         print(f"Create folder error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/storage-info', methods=['GET'])
 def storage_info():
@@ -412,6 +462,7 @@ def storage_info():
     except Exception as e:
         print(f"Storage info error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     print(f"Storage location: {app.config['UPLOAD_FOLDER']}")

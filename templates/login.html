@@ -10,8 +10,9 @@
     <div class="auth-container">
         <div class="auth-header">
             <div class="auth-icon">
-                <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"/>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </div>
             <h1 class="auth-title">Welcome Back</h1>
@@ -21,38 +22,56 @@
         <div id="alert" class="alert"></div>
 
         <form class="auth-form" id="loginForm">
+            <!-- USERNAME FIELD - FIXED ORDER -->
             <div class="form-group">
-                <label class="form-label">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                    </svg>
-                    Username
-                </label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    class="form-input" 
-                    placeholder="Enter your username"
-                    required
-                    autocomplete="username"
-                >
+                <div class="input-wrapper">
+                    <!-- ✅ INPUT FIRST -->
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username"
+                        class="form-input" 
+                        placeholder=" "
+                        required
+                        autocomplete="username"
+                    >
+                    <!-- ✅ LABEL AFTER INPUT -->
+                    <label for="username" class="form-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Username
+                    </label>
+                    <!-- ✅ CLEAR BUTTON LAST -->
+                    <button type="button" class="clear-input" onclick="clearInput('username')" aria-label="Clear username">×</button>
+                </div>
             </div>
 
+            <!-- PASSWORD FIELD - FIXED ORDER -->
             <div class="form-group">
-                <label class="form-label">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-                    </svg>
-                    Password
-                </label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    class="form-input" 
-                    placeholder="Enter your password"
-                    required
-                    autocomplete="current-password"
-                >
+                <div class="input-wrapper">
+                    <!-- ✅ INPUT FIRST -->
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        class="form-input" 
+                        placeholder=" "
+                        required
+                        autocomplete="current-password"
+                    >
+                    <!-- ✅ LABEL AFTER INPUT -->
+                    <label for="password" class="form-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Password
+                    </label>
+                    <!-- ✅ CLEAR BUTTON LAST -->
+                    <button type="button" class="clear-input" onclick="clearInput('password')" aria-label="Clear password">×</button>
+                </div>
             </div>
 
             <button type="submit" class="submit-btn" id="submitBtn">
@@ -72,6 +91,13 @@
         const loginForm = document.getElementById('loginForm');
         const submitBtn = document.getElementById('submitBtn');
         const alertBox = document.getElementById('alert');
+
+        // Clear input function
+        function clearInput(id) {
+            const input = document.getElementById(id);
+            input.value = '';
+            input.focus();
+        }
 
         function showAlert(message, type) {
             alertBox.textContent = message;
@@ -94,7 +120,7 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Signing in...';
+            submitBtn.classList.add('loading');
 
             try {
                 const response = await fetch('/login', {
@@ -115,12 +141,12 @@
                 } else {
                     showAlert(data.message || 'Login failed', 'error');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Sign In';
+                    submitBtn.classList.remove('loading');
                 }
             } catch (error) {
                 showAlert('Connection error. Please try again.', 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Sign In';
+                submitBtn.classList.remove('loading');
             }
         });
     </script>

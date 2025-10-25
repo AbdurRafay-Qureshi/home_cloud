@@ -1,0 +1,36 @@
+<!-- New Folder Modal Component -->
+<div class="modal-overlay" id="newFolderModal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeNewFolderModal()"></div>
+    
+    <div class="upload-modal" style="max-width: 400px;">
+        <!-- Modal Header -->
+        <div class="modal-header">
+            <h2 class="modal-title">Create New Folder</h2>
+            <button class="modal-close" onclick="closeNewFolderModal()" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="folderNameInput">Folder Name</label>
+                <input 
+                    type="text" 
+                    id="folderNameInput" 
+                    class="form-control" 
+                    placeholder="Enter folder name"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;"
+                >
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeNewFolderModal()" type="button">Cancel</button>
+            <button class="btn btn-primary" onclick="createFolder()" type="button">Create</button>
+        </div>
+    </div>
+</div>
